@@ -4,19 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>English ⇄ დივა Translator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
   <style>
     :root {
-      --bg: #121212;
-      --text: #e0e0e0;
-      --button-bg: #444;
-      --button-text: #fff;
-      --copy-bg: #6CBF73;
-      --copy-hover: #5aa461;
-      --section-bg: #1e1e1e;
-    }
-
-    body.light {
       --bg: #f4f4f4;
       --text: #000;
       --button-bg: #333;
@@ -24,6 +13,16 @@
       --copy-bg: #4CAF50;
       --copy-hover: #45a049;
       --section-bg: white;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #e0e0e0;
+      --button-bg: #444;
+      --button-text: #fff;
+      --copy-bg: #6CBF73;
+      --copy-hover: #5aa461;
+      --section-bg: #1e1e1e;
     }
 
     body {
@@ -85,12 +84,7 @@
       resize: vertical;
     }
 
-    body.light textarea {
-      background-color: #fff;
-      color: #000;
-    }
-
-    body textarea {
+    body.dark textarea {
       background-color: #2c2c2c;
       color: #eee;
       border: 1px solid #444;
@@ -113,11 +107,6 @@
       font-size: 0.9rem;
     }
 
-    input[type="file"] {
-      margin-top: 1rem;
-      color: var(--text);
-    }
-
     @media (max-width: 600px) {
       h1 {
         font-size: 1.4rem;
@@ -136,19 +125,14 @@
 </head>
 <body>
 
-  <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
 
   <h1>English ⇄ დივა Translator</h1>
 
   <div class="button-container">
     <button onclick="showSection('englishToDiva')">English to დივა</button>
     <button onclick="showSection('divaToEnglish')">დივა to English</button>
-    <button onclick="document.getElementById('engDoc').click()">English.docx to დივა</button>
-    <button onclick="document.getElementById('divaDoc').click()">დივა.docx to English</button>
   </div>
-
-  <input type="file" id="engDoc" accept=".docx" style="display:none" onchange="handleDocxToDiva(event)" />
-  <input type="file" id="divaDoc" accept=".docx" style="display:none" onchange="handleDocxToEng(event)" />
 
   <div id="englishToDiva" class="section">
     <h2>English to დივა</h2>
@@ -187,12 +171,21 @@
 
     function translateToDiva() {
       const input = document.getElementById('englishInput').value;
-      document.getElementById('divaOutput').value = mapText(input, engToDivaMap);
+      let result = '';
+      for (let char of input) {
+        const lowerChar = char.toLowerCase();
+        result += engToDivaMap[lowerChar] ?? char;
+      }
+      document.getElementById('divaOutput').value = result;
     }
 
     function translateToEnglish() {
       const input = document.getElementById('divaInput').value;
-      document.getElementById('englishOutput').value = mapText(input, divaToEngMap);
+      let result = '';
+      for (let char of input) {
+        result += divaToEngMap[char] ?? char;
+      }
+      document.getElementById('englishOutput').value = result;
     }
 
     function copyText(id) {
@@ -203,52 +196,9 @@
       alert("Copied!");
     }
 
-    function mapText(text, map) {
-      return [...text].map(char => {
-        const lower = char.toLowerCase();
-        return map[lower] ?? char;
-      }).join('');
-    }
-
     function toggleTheme() {
-      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
     }
-
-    function handleDocxToDiva(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      mammoth.extractRawText({ arrayBuffer: file.arrayBuffer() })
-        .then(result => {
-          const text = result.value;
-          const converted = mapText(text, engToDivaMap);
-          alert("Converted Text:\n\n" + converted);
-        })
-        .catch(err => alert("Failed to read file."));
-    }
-
-    function handleDocxToEng(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      mammoth.extractRawText({ arrayBuffer: file.arrayBuffer() })
-        .then(result => {
-          const text = result.value;
-          const converted = mapText(text, divaToEngMap);
-          alert("Converted Text:\n\n" + converted);
-        })
-        .catch(err => alert("Failed to read file."));
-    }
-
-    // Patch FileReader to get ArrayBuffer
-    File.prototype.arrayBuffer = File.prototype.arrayBuffer || function () {
-      return new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = reject;
-        fr.readAsArrayBuffer(this);
-      });
-    };
   </script>
 
 </body>
